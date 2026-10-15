@@ -30,7 +30,7 @@ jobs:
       - name: Configure Android SDK
         uses: android-actions/setup-android@v4
         with:
-          accept-android-sdk-licenses: 'no'
+          accept-android-sdk-licenses: false
 
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses
