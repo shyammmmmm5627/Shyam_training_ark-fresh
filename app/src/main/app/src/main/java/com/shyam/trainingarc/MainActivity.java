@@ -1,12 +1,12 @@
 
 package com.shyam.trainingarc;
 
+import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -35,7 +35,10 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private LinearLayout root;
-    private TextView xpText, rankText, pdfName, pageText;
+    private TextView xpText;
+    private TextView rankText;
+    private TextView pdfName;
+    private TextView pageText;
     private ImageView pdfImage;
 
     private PdfRenderer renderer;
@@ -61,39 +64,94 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
 
-        getWindow().setStatusBarColor(Color.rgb(15, 12, 25));
-        getWindow().setNavigationBarColor(Color.rgb(15, 12, 25));
+        try {
+            getWindow().setStatusBarColor(
+                    Color.rgb(15, 12, 25));
 
-        SharedPreferences prefs =
-                getSharedPreferences("training_arc", MODE_PRIVATE);
+            getWindow().setNavigationBarColor(
+                    Color.rgb(15, 12, 25));
 
-        xp = prefs.getInt("xp", 0);
-        completed = prefs.getInt("completed", 0);
+            SharedPreferences prefs =
+                    getSharedPreferences(
+                            "training_arc",
+                            MODE_PRIVATE);
 
-        buildScreen();
-        requestNotificationPermission();
+            xp = prefs.getInt("xp", 0);
+            completed = prefs.getInt("completed", 0);
+
+            buildScreen();
+            requestNotificationPermission();
+
+        } catch (Exception e) {
+            showCrashDetails(e);
+        }
+    }
+
+    private void showCrashDetails(Exception e) {
+        try {
+            ScrollView scroll = new ScrollView(this);
+            scroll.setBackgroundColor(Color.rgb(35, 12, 20));
+
+            TextView details = new TextView(this);
+            details.setTextColor(Color.WHITE);
+            details.setTextSize(14);
+            details.setPadding(
+                    dp(18), dp(18), dp(18), dp(18));
+
+            StringBuilder message = new StringBuilder();
+
+            message.append("SHYAM TRAINING ARC\n");
+            message.append("DIAGNOSTIC ERROR\n\n");
+            message.append(e.getClass().getName());
+            message.append("\n\n");
+            message.append(String.valueOf(e.getMessage()));
+            message.append("\n\n");
+
+            StackTraceElement[] lines = e.getStackTrace();
+
+            for (int i = 0;
+                 i < lines.length && message.length() < 5000;
+                 i++) {
+                message.append(lines[i].toString());
+                message.append("\n");
+            }
+
+            details.setText(message.toString());
+            scroll.addView(details);
+            setContentView(scroll);
+
+        } catch (Exception ignored) {
+            Toast.makeText(
+                    this,
+                    "App startup failed. Please check the build.",
+                    Toast.LENGTH_LONG
+            ).show();
+        }
     }
 
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                checkSelfPermission(
+                        Manifest.permission.POST_NOTIFICATIONS)
                         != PackageManager.PERMISSION_GRANTED) {
 
             requestPermissions(
                     new String[]{
                             Manifest.permission.POST_NOTIFICATIONS
                     },
-                    NOTIFICATION_PERMISSION_CODE
-            );
+                    NOTIFICATION_PERMISSION_CODE);
         }
     }
 
     private TextView text(String value, int size) {
         TextView t = new TextView(this);
+
         t.setText(value);
         t.setTextColor(Color.WHITE);
         t.setTextSize(size);
-        t.setPadding(dp(4), dp(6), dp(4), dp(6));
+        t.setPadding(
+                dp(4), dp(6), dp(4), dp(6));
+
         return t;
     }
 
@@ -107,23 +165,22 @@ public class MainActivity extends Activity {
         button.setTextColor(Color.WHITE);
 
         button.setBackgroundTintList(
-                ColorStateList.valueOf(Color.rgb(94, 52, 160)));
+                ColorStateList.valueOf(
+                        Color.rgb(94, 52, 160)));
 
         LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(-1, -2);
 
-        params.setMargins(0, dp(4), 0, dp(4));
+        params.setMargins(
+                0, dp(4), 0, dp(4));
+
         box.addView(button, params);
 
         button.setOnClickListener(v -> {
             try {
                 action.run();
             } catch (Exception e) {
-                Toast.makeText(
-                        MainActivity.this,
-                        "Something went wrong. Please try again.",
-                        Toast.LENGTH_LONG
-                ).show();
+                showCrashDetails(e);
             }
         });
     }
@@ -133,13 +190,18 @@ public class MainActivity extends Activity {
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(18), dp(18), dp(24));
-        root.setBackgroundColor(Color.rgb(15, 12, 25));
+        root.setPadding(
+                dp(18), dp(18), dp(18), dp(24));
+
+        root.setBackgroundColor(
+                Color.rgb(15, 12, 25));
 
         scroll.addView(root);
         setContentView(scroll);
 
-        TextView title = text("⚔ SHYAM TRAINING ARC", 25);
+        TextView title = text(
+                "⚔ SHYAM TRAINING ARC", 25);
+
         title.setTypeface(null, 1);
         root.addView(title);
 
@@ -154,13 +216,18 @@ public class MainActivity extends Activity {
 
         refreshProgress();
 
-        root.addView(text("━━━━━━━━━━━━━━━━━━", 12));
-        root.addView(text("📚 STUDY LIBRARY", 21));
+        root.addView(text(
+                "━━━━━━━━━━━━━━━━━━", 12));
+
+        root.addView(text(
+                "📚 STUDY LIBRARY", 21));
 
         pdfName = text(selectedPdfName, 15);
         root.addView(pdfName);
 
-        addButton(root, "＋ ADD PDF FROM PHONE",
+        addButton(
+                root,
+                "＋ ADD PDF FROM PHONE",
                 this::pickPdf);
 
         pageText = text("No document open", 14);
@@ -168,51 +235,78 @@ public class MainActivity extends Activity {
 
         pdfImage = new ImageView(this);
         pdfImage.setAdjustViewBounds(true);
-        pdfImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        pdfImage.setScaleType(
+                ImageView.ScaleType.FIT_CENTER);
 
-        LinearLayout.LayoutParams imageParams =
-                new LinearLayout.LayoutParams(-1, dp(420));
+        root.addView(
+                pdfImage,
+                new LinearLayout.LayoutParams(
+                        -1, dp(420)));
 
-        root.addView(pdfImage, imageParams);
-
-        addButton(root, "◀ PREVIOUS PAGE",
+        addButton(
+                root,
+                "◀ PREVIOUS PAGE",
                 () -> showPage(pageIndex - 1));
 
-        addButton(root, "NEXT PAGE ▶",
+        addButton(
+                root,
+                "NEXT PAGE ▶",
                 () -> showPage(pageIndex + 1));
 
-        root.addView(text("━━━━━━━━━━━━━━━━━━", 12));
-        root.addView(text("⏰ STUDY REMINDERS", 21));
-
-        addButton(root, "＋ SET DAILY STUDY REMINDER",
-                this::createReminder);
-
-        root.addView(text("━━━━━━━━━━━━━━━━━━", 12));
-        root.addView(text("⚡ DAILY MISSIONS", 21));
-
-        addButton(root, "📖 Complete Study Session (+20 XP)",
-                () -> completeMission("Study", 20));
-
-        addButton(root, "🎨 Complete Drawing (+10 XP)",
-                () -> completeMission("Drawing", 10));
-
-        addButton(root, "💪 Complete Exercise (+10 XP)",
-                () -> completeMission("Exercise", 10));
-
-        addButton(root, "🌙 Complete Sleep Goal (+10 XP)",
-                () -> completeMission("Sleep", 10));
-
-        addButton(root, "📵 Stop Scrolling (+10 XP)",
-                () -> completeMission("Stop Scrolling", 10));
-
-        addButton(root, "＋ ADD CUSTOM MISSION",
-                this::createCustomMission);
-
-        root.addView(text("━━━━━━━━━━━━━━━━━━", 12));
+        root.addView(text(
+                "━━━━━━━━━━━━━━━━━━", 12));
 
         root.addView(text(
-                "Your XP and completed missions are saved on this phone.",
-                12));
+                "⏰ STUDY REMINDERS", 21));
+
+        addButton(
+                root,
+                "＋ SET DAILY STUDY REMINDER",
+                this::createReminder);
+
+        root.addView(text(
+                "━━━━━━━━━━━━━━━━━━", 12));
+
+        root.addView(text(
+                "⚡ DAILY MISSIONS", 21));
+
+        addButton(
+                root,
+                "📖 Complete Study Session (+20 XP)",
+                () -> completeMission("Study", 20));
+
+        addButton(
+                root,
+                "🎨 Complete Drawing (+10 XP)",
+                () -> completeMission("Drawing", 10));
+
+        addButton(
+                root,
+                "💪 Complete Exercise (+10 XP)",
+                () -> completeMission("Exercise", 10));
+
+        addButton(
+                root,
+                "🌙 Complete Sleep Goal (+10 XP)",
+                () -> completeMission("Sleep", 10));
+
+        addButton(
+                root,
+                "📵 Stop Scrolling (+10 XP)",
+                () -> completeMission(
+                        "Stop Scrolling", 10));
+
+        addButton(
+                root,
+                "＋ ADD CUSTOM MISSION",
+                this::createCustomMission);
+
+        root.addView(text(
+                "━━━━━━━━━━━━━━━━━━", 12));
+
+        root.addView(text(
+                "Your XP and completed missions are saved " +
+                "on this phone.", 12));
     }
 
     private void refreshProgress() {
@@ -241,11 +335,16 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void completeMission(String name, int reward) {
+    private void completeMission(
+            String name,
+            int reward) {
+
         xp += reward;
         completed++;
 
-        getSharedPreferences("training_arc", MODE_PRIVATE)
+        getSharedPreferences(
+                "training_arc",
+                MODE_PRIVATE)
                 .edit()
                 .putInt("xp", xp)
                 .putInt("completed", completed)
@@ -264,17 +363,18 @@ public class MainActivity extends Activity {
         EditText input = new EditText(this);
         input.setHint("Enter your mission");
         input.setSingleLine(true);
-        input.setTextColor(Color.WHITE);
-        input.setHintTextColor(Color.LTGRAY);
 
         new AlertDialog.Builder(this)
                 .setTitle("Create Custom Mission")
                 .setView(input)
                 .setNegativeButton("Cancel", null)
-                .setPositiveButton("Complete (+10 XP)",
+                .setPositiveButton(
+                        "Complete (+10 XP)",
                         (dialog, which) -> {
+
                             String name = input.getText()
-                                    .toString().trim();
+                                    .toString()
+                                    .trim();
 
                             if (name.isEmpty()) {
                                 Toast.makeText(
@@ -299,8 +399,7 @@ public class MainActivity extends Activity {
 
         intent.addFlags(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-        );
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
 
         startActivityForResult(intent, PICK_PDF);
     }
@@ -311,7 +410,8 @@ public class MainActivity extends Activity {
             int resultCode,
             Intent data) {
 
-        super.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(
+                requestCode, resultCode, data);
 
         if (requestCode != PICK_PDF ||
                 resultCode != RESULT_OK ||
@@ -323,14 +423,15 @@ public class MainActivity extends Activity {
         selectedPdf = data.getData();
 
         try {
-            getContentResolver().takePersistableUriPermission(
-                    selectedPdf,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-            );
+            getContentResolver()
+                    .takePersistableUriPermission(
+                            selectedPdf,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION);
         } catch (Exception ignored) {
         }
 
         selectedPdfName = getFileName(selectedPdf);
+
         pdfName.setText("📄 " + selectedPdfName);
 
         try {
@@ -358,7 +459,11 @@ public class MainActivity extends Activity {
                         OpenableColumns.DISPLAY_NAME);
 
                 if (index >= 0) {
-                    name = cursor.getString(index);
+                    String result = cursor.getString(index);
+
+                    if (result != null && !result.isEmpty()) {
+                        name = result;
+                    }
                 }
             }
         } catch (Exception ignored) {
@@ -393,7 +498,8 @@ public class MainActivity extends Activity {
             return;
         }
 
-        if (index < 0 || index >= renderer.getPageCount()) {
+        if (index < 0 ||
+                index >= renderer.getPageCount()) {
             return;
         }
 
@@ -409,8 +515,7 @@ public class MainActivity extends Activity {
             Bitmap bitmap = Bitmap.createBitmap(
                     currentPage.getWidth(),
                     currentPage.getHeight(),
-                    Bitmap.Config.ARGB_8888
-            );
+                    Bitmap.Config.ARGB_8888);
 
             bitmap.eraseColor(Color.WHITE);
 
@@ -418,15 +523,13 @@ public class MainActivity extends Activity {
                     bitmap,
                     null,
                     null,
-                    PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY
-            );
+                    PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
             pdfImage.setImageBitmap(bitmap);
 
             pageText.setText(
                     "Page " + (pageIndex + 1) +
-                    " of " + renderer.getPageCount()
-            );
+                    " of " + renderer.getPageCount());
 
         } catch (Exception e) {
             Toast.makeText(
@@ -439,14 +542,16 @@ public class MainActivity extends Activity {
 
     private void createReminder() {
         EditText subjectInput = new EditText(this);
-        subjectInput.setHint("Subject, e.g. Political Science");
+        subjectInput.setHint(
+                "Subject, e.g. Political Science");
         subjectInput.setSingleLine(true);
 
         new AlertDialog.Builder(this)
                 .setTitle("New Study Reminder")
                 .setView(subjectInput)
                 .setNegativeButton("Cancel", null)
-                .setPositiveButton("Choose Time",
+                .setPositiveButton(
+                        "Choose Time",
                         (dialog, which) -> {
 
                             String subject = subjectInput
@@ -466,81 +571,79 @@ public class MainActivity extends Activity {
     private void chooseReminderTime(String subject) {
         Calendar now = Calendar.getInstance();
 
-        TimePickerDialog picker = new TimePickerDialog(
-                this,
-                (view, hour, minute) -> {
+        TimePickerDialog picker =
+                new TimePickerDialog(
+                        this,
+                        (view, hour, minute) -> {
 
-                    Intent intent = new Intent(
-                            this,
-                            ReminderReceiver.class
-                    );
-
-                    intent.setAction(
-                            "com.shyam.trainingarc.STUDY_REMINDER");
-
-                    intent.putExtra("subject", subject);
-                    intent.putExtra("pdfName", selectedPdfName);
-
-                    int requestCode =
-                            (subject + hour + minute)
-                                    .hashCode() & 0x7fffffff;
-
-                    PendingIntent pending =
-                            PendingIntent.getBroadcast(
+                            Intent intent = new Intent(
                                     this,
-                                    requestCode,
-                                    intent,
-                                    PendingIntent.FLAG_UPDATE_CURRENT |
-                                    PendingIntent.FLAG_IMMUTABLE
-                            );
+                                    ReminderReceiver.class);
 
-                    Calendar time = Calendar.getInstance();
+                            intent.setAction(
+                                    "com.shyam.trainingarc.STUDY_REMINDER");
 
-                    time.set(Calendar.HOUR_OF_DAY, hour);
-                    time.set(Calendar.MINUTE, minute);
-                    time.set(Calendar.SECOND, 0);
-                    time.set(Calendar.MILLISECOND, 0);
+                            intent.putExtra("subject", subject);
+                            intent.putExtra(
+                                    "pdfName", selectedPdfName);
 
-                    if (time.getTimeInMillis() <=
-                            System.currentTimeMillis()) {
-                        time.add(Calendar.DAY_OF_YEAR, 1);
-                    }
+                            int requestCode =
+                                    (subject + hour + minute)
+                                            .hashCode() & 0x7fffffff;
 
-                    AlarmManager alarms =
-                            (AlarmManager) getSystemService(
-                                    ALARM_SERVICE);
+                            PendingIntent pending =
+                                    PendingIntent.getBroadcast(
+                                            this,
+                                            requestCode,
+                                            intent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT |
+                                            PendingIntent.FLAG_IMMUTABLE);
 
-                    if (alarms == null) {
-                        Toast.makeText(
-                                this,
-                                "Reminder service unavailable.",
-                                Toast.LENGTH_LONG
-                        ).show();
-                        return;
-                    }
+                            Calendar time = Calendar.getInstance();
 
-                    alarms.setInexactRepeating(
-                            AlarmManager.RTC_WAKEUP,
-                            time.getTimeInMillis(),
-                            AlarmManager.INTERVAL_DAY,
-                            pending
-                    );
+                            time.set(Calendar.HOUR_OF_DAY, hour);
+                            time.set(Calendar.MINUTE, minute);
+                            time.set(Calendar.SECOND, 0);
+                            time.set(Calendar.MILLISECOND, 0);
 
-                    Toast.makeText(
-                            this,
-                            String.format(
-                                    Locale.getDefault(),
-                                    "Daily reminder set for %02d:%02d",
-                                    hour,
-                                    minute
-                            ),
-                            Toast.LENGTH_LONG
-                    ).show();
-                },
-                now.get(Calendar.HOUR_OF_DAY),
-                now.get(Calendar.MINUTE),
-                true
-        );
+                            if (time.getTimeInMillis() <=
+                                    System.currentTimeMillis()) {
+                                time.add(
+                                        Calendar.DAY_OF_YEAR, 1);
+                            }
+
+                            AlarmManager alarms =
+                                    (AlarmManager) getSystemService(
+                                            ALARM_SERVICE);
+
+                            if (alarms == null) {
+                                Toast.makeText(
+                                        this,
+                                        "Reminder service unavailable.",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                                return;
+                            }
+
+                            alarms.setInexactRepeating(
+                                    AlarmManager.RTC_WAKEUP,
+                                    time.getTimeInMillis(),
+                                    AlarmManager.INTERVAL_DAY,
+                                    pending);
+
+                            Toast.makeText(
+                                    this,
+                                    String.format(
+                                            Locale.getDefault(),
+                                            "Daily reminder set for %02d:%02d",
+                                            hour,
+                                            minute),
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        },
+                        now.get(Calendar.HOUR_OF_DAY),
+                        now.get(Calendar.MINUTE),
+                        true);
 
         picker.setTitle("Choose Daily Reminder Time");
         picker.show();
@@ -570,14 +673,4 @@ public class MainActivity extends Activity {
                 pdfDescriptor.close();
             }
         } catch (Exception ignored) {
-        }
-
-        pdfDescriptor = null;
-    }
-
-    @Override
-    protected void onDestroy() {
-        closePdf();
-        super.onDestroy();
-    }
-    }
+     
