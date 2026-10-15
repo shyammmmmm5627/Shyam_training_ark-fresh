@@ -24,8 +24,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Configure Android SDK
         uses: android-actions/setup-android@v4
@@ -41,7 +43,7 @@ jobs:
           sdkmanager --install "build-tools;35.0.0"
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace -Pandroid.useAndroidX=true -Pandroid.enableJetifier=true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
